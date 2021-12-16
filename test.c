@@ -12,8 +12,6 @@
 #include "zip.h"
 #define BUFFSIZE 1024
 
-int dataOffset = 0;
-struct meta metaRecords[20];
 
 // 1. create file
 // 2. directory -> file: append every file
@@ -58,16 +56,16 @@ struct meta metaRecords[20];
 // }
 
 void do_ls ( char dirname []) {
+	struct meta metaRecords[20];
 	DIR * dir_ptr ;
 	struct dirent *direntp ;
 	char const* mytest = "mytest";
+	mode_t fdmode = S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH;
 
 	if ((dir_ptr = opendir (dirname)) == NULL)
 		fprintf (stderr , " cannot open %s \n",dirname);
 	else {
-		int count=0, i=0;
-		while (metaRecords[i]) i++;
-		
+		int count=0, i=0;		
 		while ((direntp = readdir (dir_ptr)) != NULL ) {
             //get the inode number and file name
 			count++;
@@ -77,17 +75,26 @@ void do_ls ( char dirname []) {
 			strcat(source ,direntp -> d_name);
 
 			struct meta* curr = (struct meta*)malloc(sizeof(meta));
-			metaRecords[i] = curr;
-			strcpy(curr.name, direntp -> d_name);
-			strcpy(curr.parent_foler, dirname);
+			metaRecords[i] = *curr;
+			strcpy(curr->name, direntp -> d_name);
+			// printf("test:%s", curr->name);
+			strcpy(curr->parent_folder, dirname);
 
-			if (count !=3 ) metaRecords[i-1].next = metaRecords[i];
+			if (count !=3 ) metaRecords[i-1].next = &metaRecords[i];
 			
-            copyAndWrite(source, mytest, metaRecord[i]);
+            copyAndWrite(source, mytest, *curr);
         }
 		
 		closedir (dir_ptr);
 	}
+
+	int to;
+	if ((to = open(mytest , O_WRONLY|O_CREAT|O_APPEND, fdmode)) < 0)
+	{
+		perror("open2");
+		exit(1);
+	}
+	write(to, metaRecords, sizeof(struct meta)*20);
 }
 
 int main () {

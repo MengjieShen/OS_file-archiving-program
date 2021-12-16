@@ -1,22 +1,20 @@
 // int copyAndWrite(char fromFile[], char*toFile, int index);
-int copyAndWrite(char fromFile[],char* toFile, meta record)
-struct {
+struct meta {
   char name[200];
-//   char name_trim[200];
   int size;
   int offset;
   int dir;
-//   int root;
   char parent_folder[200];
   struct meta* next;
   struct meta* child;
-//   char parent_folder_trim[200];
 } meta;
 
-struct {
+struct header {
   int num_elts;
   int meta_offset;
   int next;
 } header;
 
-// struct meta metaRecords[20];
+struct meta metaRecords[20];
+
+int copyAndWrite(char fromFile[],char* toFile, struct meta record);
