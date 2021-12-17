@@ -31,10 +31,10 @@ void update_meta(char * file, int size)
     struct header h;
     int i;
     int old_offset, old_next;
-    meta * m;
+    struct meta * m;
     char path[300];
     FILE *fp = fopen(file, "r+");
-    m = (meta *) malloc(sizeof(meta));
+    m = (struct meta *) malloc(sizeof(meta));
     do
     {
         // Update current header

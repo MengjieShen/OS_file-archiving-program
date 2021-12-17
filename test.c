@@ -2,16 +2,15 @@
 # include <stdio.h>
 # include <sys/types.h>
 # include <dirent.h>
-#include <string.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include "zip.h"
-#define BUFFSIZE 1024
-
+# include <string.h>
+# include <stdio.h>
+# include <string.h>
+# include <stdlib.h>
+# include <fcntl.h>
+# include <unistd.h>
+# include <sys/stat.h>
+# include "zip.h"
+# define BUFFSIZE 1024
 
 // 1. create file
 // 2. directory -> file: append every file
@@ -22,6 +21,7 @@ int breakDir ( char dirname []) {
 
 	struct header header;
 	float curr_offset = 0;
+	struct stat st;
 	// header length: sizeof(int)
 
 	struct meta metaRecords[20];
@@ -67,14 +67,23 @@ int breakDir ( char dirname []) {
 			strcpy(curr->parent_folder, dirname);
 			if (count !=3 ) metaRecords[i-1].next = &metaRecords[i];
 			
+
+			// get the stat information for current directory
+			stat(mytest, &st);
+
+
 			// if file or dir
 			// if file
-			
-            curr_offset += copyAndWrite(source, mytest, *curr);
-			fileCnt++;
+			if ((st.st_mode & S_IFMT) == S_IFREG){
+				curr_offset += copyAndWrite(source, mytest, *curr);
+				fileCnt++;
+			}
+    
+			else if ((st.st_mode & S_IFMT) == S_IFDIR)
+        	{
 			// if dir -> breakDir : count+=fileCnt
 
-        }
+        	}
 
 		updateMeta(curr_offset, fileCnt);
 		closedir (dir_ptr);
@@ -91,8 +100,7 @@ int breakDir ( char dirname []) {
 	return count-2;
 }
 
-void updateHeader(int curr_offset, int numOfEle)
-{
+void updateHeader(int curr_offset, int numOfEle){
     struct header h;
     int i;
     int old_offset, old_next;
@@ -118,7 +126,7 @@ void updateHeader(int curr_offset, int numOfEle)
 		m[i].offset += size;
 	}
 	fseek (fp, old_offset, SEEK_SET);
-	fwrite (m, sizeof(struct meta*), h.num_elts, fp);\
+	fwrite (m, sizeof(struct meta*), h.num_elts, fp);
 
     // clean up
     fclose(fp);
