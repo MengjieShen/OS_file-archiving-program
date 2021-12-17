@@ -49,10 +49,10 @@ int copyAndWrite(char fromFile[],char* toFile, struct meta record)
 		dataOffset+=statbuf.st_size;
 		header.meta_offset += statbuf.st_size;
 		header.num_elts += 1;
-		// printf("name:%s\n", record.name);
-		// printf("parent_folder:%s\n", record.parent_folder);
-		// printf("size:%d\n", record.size);
-		// printf("offset:%d\n", record.offset);
+		printf("name:%s\n", record.name);
+		printf("parent_folder:%s\n", record.parent_folder);
+		printf("size:%d\n", record.size);
+		printf("offset:%d\n", record.offset);
 	}
 	
 	close(from);
