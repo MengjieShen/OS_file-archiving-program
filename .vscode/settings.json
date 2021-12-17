@@ -3,6 +3,7 @@
         "string.h": "c",
         "zip.h": "c",
         "filesystem": "c",
-        "random": "c"
+        "random": "c",
+        "typeinfo": "c"
     }
 }

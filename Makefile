@@ -9,17 +9,26 @@ LIBS = -lm
 # ****************************************************
 # Entries to bring the executable up to date
 
-test: test.o help.o 
-	$(CC) $(CFLAGS) -o test test.o help.o 
+adzip: adzip.o help.o 
+	$(CC) $(CFLAGS) -o adzip adzip.o help.o 
 	
-test.o: test.c zip.h
-	$(CC) $(CFLAGS) -c test.c
+adzip.o: adzip.c zip.h
+	$(CC) $(CFLAGS) -c adzip.c
 
 help.o: help.c zip.h
 	$(CC) $(CFLAGS) -c help.c
+run1: adzip
+	./adzip -c "test.bin" "testDir/A/B"
+
+run3: adzip
+	./adzip -x "test.bin" "/Users/shenmengjie/Documents/GitHub/OS_file-archiving-program/B/"
+
+run4: adzip
+	./adzip -m "test.bin" "testDir/A/B"
 
 clean: 
 	rm -f *~ *.o test a.out core main
+
 # readwriteclose.o: readwriteclose.c zip.h
 # 	$(CC) $(CFLAGS) -c readwriteclose.c
 

@@ -11,15 +11,11 @@
 # include "zip.h"
 # define BUFFSIZE 1024
 
-// 1. create file
-// 2. directory -> file: append every file
-// 3. directory -> dir: recursively, append all files in the lowest level, return a file to the upper level,
-
 FILE * write_ptr;
 int dataOffset = sizeof(header);
 int fileCnt = 0;
 
-int copyAndWrite(char fromFile[],char* toFile, int index)
+int copyAndWrite(char* fromFile,char* toFile, int index)
 {	
 	int n, from , to;
 	char buf[BUFFSIZE];
@@ -54,8 +50,6 @@ int copyAndWrite(char fromFile[],char* toFile, int index)
 		metaRecords[index].offset = dataOffset;
 		metaRecords[index].permissions = statbuf.st_mode;
 		dataOffset += statbuf.st_size;
-		// header.meta_offset += statbuf.st_size;
-		// header.num_elts += 1;
 	}
 	
 	close(from);
@@ -64,24 +58,27 @@ int copyAndWrite(char fromFile[],char* toFile, int index)
 
 }
 
-void addHeader() {
+void addHeader(char* archive_file) {
 	struct header header;
 	header.meta_offset = sizeof(struct header);                  // is curr_offset viable right now -- no it is not
 	header.num_elts = 0;
 	// write the header
-	write_ptr = fopen("test.bin","wb");  // w for write, b for binary
+	write_ptr = fopen(archive_file,"wb");  // w for write, b for binary
     fwrite(&header, sizeof(struct header), 1, write_ptr);
 	fclose(write_ptr);
 }
 
-void addMeta() {
-	write_ptr = fopen("test.bin","r+b");  // w for write, b for binary
-	fseek(write_ptr, 17, SEEK_SET);
+void addMeta(char* archive_file) {
+	struct header h;
+	write_ptr = fopen(archive_file,"r+b");  // w for write, b for binary
+	// Update current header
+	fread (&h, sizeof(struct header), 1, write_ptr);
+	fseek(write_ptr, h.meta_offset, SEEK_SET);
 	fwrite (&metaRecords, sizeof(struct meta)*20, 1, write_ptr);
 	fclose(write_ptr);
 }
 
-void breakDir ( char dirname []) {
+void breakDir ( char* dirname, char* archive_file, char* parent) {
 	float curr_offset = 0;
 	struct stat st;
 	DIR * dir_ptr ;
@@ -94,6 +91,16 @@ void breakDir ( char dirname []) {
 	if ((dir_ptr = opendir (dirname)) == NULL)
 		fprintf (stderr , " cannot open %s \n",dirname);
 	else {
+	// get the stat information for current directory
+		stat(dirname, &st);
+		if((st.st_mode & S_IFMT) == S_IFDIR){
+			metaRecords[fileCnt].isFile = false;
+			strcpy(metaRecords[fileCnt].name, trimmer(dirname));
+			strcpy(metaRecords[fileCnt].parent, trimmer(parent));
+			metaRecords[fileCnt].permissions =  st.st_mode;
+		// 	// header.num_elts += 1;
+			fileCnt++;
+		}
 		while ((direntp = readdir (dir_ptr)) != NULL ) {
             //get the inode number and file name
 			count++;
@@ -105,49 +112,35 @@ void breakDir ( char dirname []) {
 			strcpy(source, dirname);
 			strcat(source, "/");
 			strcat(source, direntp -> d_name);
-			// get the stat information for current directory
 			stat(source, &st);
-
 			// if file
 			if ((st.st_mode & S_IFMT) == S_IFREG){
-				printf("filecnt: %d", fileCnt);
+				// printf("filecnt: %s", source);
 				// struct meta* curr = (struct meta*)malloc(sizeof(struct meta));
 				strcpy(metaRecords[fileCnt].name, direntp -> d_name);
 				strcpy(metaRecords[fileCnt].parent, trimmer(dirname));
 				metaRecords[fileCnt].isFile = true;
-				copyAndWrite(source, "test.bin", fileCnt);
+				copyAndWrite(source, archive_file, fileCnt);
 				fileCnt++;
 				
 			}
 			// if dir
 			else if ((st.st_mode & S_IFMT) == S_IFDIR){
-				printf("filecnt: %d", fileCnt);
-				// struct meta* curr = (struct meta*)malloc(sizeof(struct meta));
-				metaRecords[fileCnt].isFile = false;
-				strcpy(metaRecords[fileCnt].name, direntp -> d_name);
-				strcpy(metaRecords[fileCnt].parent, trimmer(dirname));
-				metaRecords[fileCnt].permissions =  st.st_mode;
-				// header.num_elts += 1;
-				fileCnt++;
-				breakDir(source);
-				// updateHeader(dataOffset, fileCnt);
-				// return;
+				breakDir(source, archive_file, dirname);
 			} 
 		}
-		// updateHeader(dataOffset, fileCnt);
-		
 		closedir (dir_ptr);
 	}
 
 }
 
-void updateHeader(int offset, int numOfEle) {
+void updateHeader(int offset, int numOfEle, char* archive_file) {
     int i;
     int old_offset, old_next;
     struct meta * m;
 	struct header h;
     char path[300];
-	write_ptr = fopen("test.bin","r+b");  // w for write, b for binary
+	write_ptr = fopen(archive_file,"r+b");  // w for write, b for binary
     m = (struct meta*) malloc(sizeof(struct meta));
 
 	// Update current header
@@ -181,28 +174,39 @@ void updateHeader(int offset, int numOfEle) {
 	fclose(write_ptr);
 }
 
-void read_metadata(){
+void read_metadata(char* archive_file){
+	// printf("archive file %s", archive_file);
 	struct meta metas[20];
 	struct header h;
-	write_ptr = fopen("test.bin","rb");  // w for write, b for binary
+	write_ptr = fopen(archive_file,"rb");  // w for write, b for binary
 	// Update current header
 	fread (&h, sizeof(struct header), 1, write_ptr);
-	printf("meta offset from reading header: %d \n", h.meta_offset);
+	// printf("meta offset from reading header: %d \n", h.meta_offset);
 	fseek (write_ptr, h.meta_offset, SEEK_SET);
 	// // fread(&m, sizeof(struct meta), 1, write_ptr);
 	fread(&metas, sizeof(struct meta)*20, 1, write_ptr);
-	printf("meta file name : %s\n", metas[0].name);
-	printf("meta isfile  : %d\n", metas[0].isFile);
-	printf("meta file size : %d\n", metas[2].size);
-	printf("meta file offset : %d\n", metas[2].offset);
-	printf("meta file parent : %s\n", metas[2].parent);
+	for (int i = 0; i< h.num_elts; i++){
+		if(metas[i].isFile){
+			printf("\nFile: ");
+			printf("file name : %s ", metas[i].name);
+			printf("size : %d ", metas[i].size);
+			printf("offset : %d ", metas[i].offset);
+			printf("parent : %s ", metas[i].parent);
+			printf("permission: %d ", metas[i].permissions);
+		}else{
+			printf("\nDirectory: ");
+			printf("Directory name : %s ", metas[i].name);
+			printf("parent : %s ", metas[i].parent);
+			printf("permission: %d ", metas[i].permissions);
+		}
+	}
 	fclose(write_ptr);
 	// return metas;
 }
 
-void extractfile(char path[1024], int offset, int size, int permissions){
+void extractfile(char path[1024], char* archive_file, int offset, int size, int permissions){
 	int n;
-	write_ptr = fopen("test.bin","r+b");
+	write_ptr = fopen(archive_file,"r+b");
 	FILE * extract_ptr;
 	printf("path %s", path);
 	extract_ptr = fopen(path, "w");
@@ -220,15 +224,9 @@ void extractfile(char path[1024], int offset, int size, int permissions){
 
 
 //dircectory chmod 还没加
-void extract(char root[1024], char path[1024]){
+//path is current path
+void extract(char root[1024], char path[1024], char* archive_file){
 
-	char tmppath[1024];
-	strcpy(tmppath, path);
-	// strcat(tmppath, "/");
-	strcat(tmppath, root);
-	strcat(tmppath, "/");
-	// printf("tmppath %s", tmppath);
-	path = tmppath;
 	if(mkdir(path, 0777) == -1)
 	{
 		fprintf(stderr, "Error making dir: %s\n", path);
@@ -240,56 +238,62 @@ void extract(char root[1024], char path[1024]){
 
 	struct meta metas[20];
 	struct header h;
-	write_ptr = fopen("test.bin","rb");  // w for write, b for binary
+	write_ptr = fopen(archive_file,"rb");  // w for write, b for binary
 	fread (&h, sizeof(struct header), 1, write_ptr);
 	fseek (write_ptr, h.meta_offset, SEEK_SET);
 	fread(&metas, sizeof(struct meta)*20, 1, write_ptr);
 	fclose(write_ptr);
-	printf("num elements: %s", metas[0].parent);
 	for(int i = 0; i<h.num_elts; i++){
-		printf("\nparent%s\n",metas[i].parent);
 		if(strcmp(metas[i].parent,root)== 0){
-		// 	//file
+		char tmppath[1024];
+		strcpy(tmppath, path);
+		strcat(tmppath, metas[i].name);
+			//file
 			if(metas[i].isFile){
-				// continue;
-				printf("\n\n %s \n\n", metas[i].name);
-				// path = "/Users/shenmengjie/Documents/GitHub/OS_file-archiving-program/testDir1";
-				char tmppath[1024];
-				strcpy(tmppath, path);
-				// strcat(tmppath, "/");
-				strcat(tmppath, metas[i].name);
 				printf("tmppath file: %s\n", tmppath);
-				extractfile(tmppath, metas[i].offset, metas[i].size, metas[i].permissions);
+				extractfile(tmppath, archive_file, metas[i].offset, metas[i].size, metas[i].permissions);
 			}
 		 	//directory
 			else{
-				// printf("\n\n %s \n\n", metas[i].name);
-				// char tmppath[1024];
-				// strcpy(tmppath, path);
-				// // strcat(tmppath, "/");
-				// strcat(tmppath, metas[i].name);
-				// strcat(tmppath, "/");
-				// printf("tmppath %s", tmppath);
-				// if(mkdir(path, metas[i].permissions) == -1)
-				// {
-				// 	fprintf(stderr, "Error making dir: %s\n", path);
-				// 	// free(m);
-				// 	perror("Error: ");
-				// 	exit(1);
-				// }
-				extract(metas[i].name, tmppath);
+				strcat(tmppath, "/");
+				extract(metas[i].name, tmppath, archive_file);
 			}
 		}
 	}
 }
 
 
-int main () {
-	addHeader();
-	char dirName[] = "testDir/A";	
-	breakDir (dirName);
-	updateHeader(dataOffset, fileCnt);
-	addMeta();
-	// read_metadata();
-	extract("B", "/Users/shenmengjie/Documents/GitHub/OS_file-archiving-program/");
+int main(int argc, char *argv[]){
+	const char * archive_file;
+	const char * dirName;
+	for (int q = 0; q < argc; q++)
+	{
+		//archive file
+		if (strcmp(argv[q], "-c") == 0){
+            archive_file = argv[q + 1];
+			dirName = argv[q+2];
+			addHeader(archive_file);
+			breakDir (dirName, archive_file, "..");
+			updateHeader(dataOffset, fileCnt, archive_file);
+			addMeta(archive_file);
+        }
+		else if (strcmp(argv[q], "-a") == 0){
+
+		}
+		//extract file
+		else if (strcmp(argv[q], "-x") == 0){
+            archive_file = argv[q + 1];
+			dirName = argv[q+2];
+			extract("B", dirName, archive_file);
+		}
+		//display metadata
+		else if (strcmp(argv[q], "-m") == 0){
+            archive_file = argv[q + 1];
+			dirName = argv[q+2];
+			read_metadata(archive_file);
+		}
+		else if (strcmp(argv[q], "-p") == 0){
+
+		}
+	}
 }

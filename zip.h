@@ -17,12 +17,12 @@ struct header {
 
 struct meta metaRecords[20];
 
-int copyAndWrite(char fromFile[],char* toFile, int index);
-void updateHeader(int curr_offset, int numOfEle);
+int copyAndWrite(char* fromFile,char* toFile, int index);
+void updateHeader(int offset, int numOfEle, char* archive_file);
 char * trimmer(char * str);
-void addHeader();
-void addMeta();
-void breakDir ( char dirname []);
-void updateHeader(int offset, int numOfEle);
-void read_metadata();
-void extract(char* root, char * relative_path);
+void addHeader(char* archive_file);
+void addMeta(char* archive_file);
+void breakDir ( char* dirname, char* archive_file, char* parent);
+void read_metadata(char* archive_file);
+void extract(char root[1024], char path[1024], char* archive_file);
+void extractfile(char path[1024], char* archive_file, int offset, int size, int permissions);
