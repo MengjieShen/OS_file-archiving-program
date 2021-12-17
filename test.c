@@ -143,7 +143,7 @@ void updateHeader(int curr_offset, int numOfEle) {
     struct meta * m;
 	struct header h;
     char path[300];
-	write_ptr = fopen("test.bin","w+b");  // w for write, b for binary
+	write_ptr = fopen("test.bin","a+b");  // w for write, b for binary
     m = (struct meta*) malloc(sizeof(struct meta));
 
 	// Update current header
