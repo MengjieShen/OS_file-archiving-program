@@ -25,10 +25,6 @@ int copyAndWrite(char fromFile[],char* toFile, int index)
 	mode_t fdmode = S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH;
 	struct stat statbuf ;
 
-	// printf("1. name:%s\n", metaRecords[index].name);
-	// printf("1. parent_folder:%s\n", metaRecords[index].parent_folder);
-	// printf("1. size:%d\n", metaRecords[index].size);
-	// printf("1. offset:%d\n", metaRecords[index].offset);
 	//open the "from" source file
 	if ((from = open(fromFile , O_RDONLY)) < 0)
 	{
