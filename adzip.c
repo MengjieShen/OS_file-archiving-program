@@ -211,17 +211,14 @@ void extractfile(char path[1024], char* archive_file, int offset, int size, int 
 	printf("path %s", path);
 	extract_ptr = fopen(path, "w");
 	char* buf;
-// 	printf("size %d", size);
 	fseek(write_ptr, offset, SEEK_SET);
-// // 	//read from the "from" file and write into the "to" file
+	//read from the "from" file and write into the "to" file
 	fread (&buf, size, 1, write_ptr);
-	// printf("buffer %s", &buf);
 	fwrite (&buf, size, 1, extract_ptr);
-	// chmod(path, permissions);
+	chmod(path, permissions);
 	fclose(write_ptr);
 	fclose(extract_ptr);
 }
-
 
 //dircectory chmod 还没加
 //path is current path
@@ -262,6 +259,34 @@ void extract(char root[1024], char path[1024], char* archive_file){
 	}
 }
 
+void traverse(char* archive_file, char* dirname, int count){
+	char* root = trimmer(dirname);
+	for(int j = 0; j<count; j++){
+		printf("%s","-");
+	}
+	printf("%s\n", root);
+	count +=2;
+	struct meta metas[20];
+	struct header h;
+	write_ptr = fopen(archive_file,"rb");  // w for write, b for binary
+	fread (&h, sizeof(struct header), 1, write_ptr);
+	fseek (write_ptr, h.meta_offset, SEEK_SET);
+	fread(&metas, sizeof(struct meta)*20, 1, write_ptr);
+	fclose(write_ptr);
+	for(int i = 0; i<h.num_elts; i++){
+		if(strcmp(metas[i].parent,root)== 0){
+			if(metas[i].isFile){
+				for(int j = 0; j<count; j++){
+					printf("%s","-");
+				}
+				printf("%s\n", metas[i].name);
+			}else{
+				traverse(archive_file, metas[i].name, count);
+			}
+
+		}
+	}
+}
 
 int main(int argc, char *argv[]){
 	const char * archive_file;
@@ -293,7 +318,9 @@ int main(int argc, char *argv[]){
 			read_metadata(archive_file);
 		}
 		else if (strcmp(argv[q], "-p") == 0){
-
-		}
+            archive_file = argv[q + 1];
+			dirName = argv[q+2];
+			traverse(archive_file, dirName, 0);
+	}
 	}
 }

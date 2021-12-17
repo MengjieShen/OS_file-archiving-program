@@ -4,6 +4,7 @@
         "zip.h": "c",
         "filesystem": "c",
         "random": "c",
-        "typeinfo": "c"
+        "typeinfo": "c",
+        "sstream": "c"
     }
 }

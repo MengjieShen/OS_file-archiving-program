@@ -26,3 +26,4 @@ void breakDir ( char* dirname, char* archive_file, char* parent);
 void read_metadata(char* archive_file);
 void extract(char root[1024], char path[1024], char* archive_file);
 void extractfile(char path[1024], char* archive_file, int offset, int size, int permissions);
+void traverse(char* archive_file, char* dirname, int count);
