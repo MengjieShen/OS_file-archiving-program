@@ -12,22 +12,24 @@
 #include "zip.h"
 #define BUFFSIZE 1024
 int dataOffset = 0;
+struct meta metaRecords[20];
+
 // 1. create file
 // 2. directory -> file: append every file
 // 3. directory -> dir: recursively, append all files in the lowest level, return a file to the upper level,
 
-int copyAndWrite(char fromFile[],char* toFile, struct meta record)
+int copyAndWrite(char fromFile[],char* toFile, int index)
 {
 	int n, from , to;
 	char buf[BUFFSIZE];
+	memset(buf, 0, BUFFSIZE);
 	mode_t fdmode = S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH;
 	struct stat statbuf ;
-
+	struct meta record = metaRecords[index];
 	//open the "from" source file
 	if ((from = open(fromFile , O_RDONLY)) < 0)
 	{
 		perror("open1");
-		// printf("Vivi");
 		exit(1);
 	}
 
@@ -39,8 +41,11 @@ int copyAndWrite(char fromFile[],char* toFile, struct meta record)
 	}
 
 	//read from the "from" file and write into the "to" file
-	while((n=read(from, buf, sizeof(buf)))>0) 
+	while((n=read(from, buf, sizeof(buf)))>0) {
+		// printf("line being written: %s\n", buf);
 		write(to,buf,n);
+	}
+		
 	
 	if (stat (fromFile , &statbuf ) == -1) perror("stat");
 	else {
@@ -49,10 +54,10 @@ int copyAndWrite(char fromFile[],char* toFile, struct meta record)
 		dataOffset+=statbuf.st_size;
 		header.meta_offset += statbuf.st_size;
 		header.num_elts += 1;
-		printf("name:%s\n", record.name);
-		printf("parent_folder:%s\n", record.parent_folder);
-		printf("size:%d\n", record.size);
-		printf("offset:%d\n", record.offset);
+		// printf("name:%s\n", record.name);
+		// printf("parent_folder:%s\n", record.parent_folder);
+		// printf("size:%d\n", record.size);
+		// printf("offset:%d\n", record.offset);
 	}
 	
 	close(from);

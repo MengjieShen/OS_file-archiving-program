@@ -17,5 +17,5 @@ struct header {
 
 struct meta metaRecords[20];
 
-int copyAndWrite(char fromFile[],char* toFile, struct meta record);
+int copyAndWrite(char fromFile[],char* toFile, int index);
 void updateHeader(int curr_offset, int numOfEle);

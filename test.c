@@ -16,6 +16,7 @@
 // 2. directory -> file: append every file
 // 3. directory -> dir: recursively, append all files in the lowest level, return a file to the upper level,
 FILE * write_ptr;
+struct meta metaRecords[20];
 
 int breakDir ( char dirname []) {
 
@@ -23,7 +24,7 @@ int breakDir ( char dirname []) {
 	float curr_offset = 0;
 	struct stat st;
 
-	struct meta metaRecords[20];
+	// struct meta metaRecords[20];
 	DIR * dir_ptr ;
 	struct dirent *direntp ;
 	char const* mytest = "mytest";
@@ -39,7 +40,7 @@ int breakDir ( char dirname []) {
 
 	write_ptr = fopen("test.bin","wb");  // w for write, b for binary
     fwrite(&header, sizeof(struct header), 1, write_ptr);
-    printf("num_of_eles:%d\n", header.num_elts);
+    // printf("num_of_eles:%d\n", header.num_elts);
 
 	//update current pointer 
 	curr_offset += sizeof(header);
@@ -72,7 +73,7 @@ int breakDir ( char dirname []) {
 			// if file or dir
 			// if file
 			if ((st.st_mode & S_IFMT) == S_IFREG){
-				curr_offset += copyAndWrite(source, "test.bin", *curr);
+				curr_offset += copyAndWrite(source, "test.bin", i);
 				fileCnt++;
 			}
     
@@ -80,9 +81,8 @@ int breakDir ( char dirname []) {
         	{
 			// if dir -> breakDir : count+=fileCnt
 				fileCnt += breakDir(source);
-				printf("File count counting dir A: %d\n", fileCnt);
         	}
-				printf("\n\nfile count test: %d\n\n", fileCnt);
+				// printf("\n\nfile count test: %d\n\n", fileCnt);
 				
 
 		}
@@ -115,8 +115,8 @@ void updateHeader(int curr_offset, int numOfEle) {
 	fseek (write_ptr, (-1)*(sizeof(struct header)), SEEK_CUR);
 	// fwrite (&h, sizeof(struct header), 1, fp);
 	fwrite (&h, sizeof(struct header), 1, write_ptr);
-	printf("meta_offset:%d\n", h.meta_offset);
-	printf("old_offset:%d\n", old_offset);
+	// printf("meta_offset:%d\n", h.meta_offset);
+	// printf("old_offset:%d\n", old_offset);
 
 	// update header's metadata
 	// fseek (fp, old_offset, SEEK_SET);
@@ -140,13 +140,9 @@ void updateHeader(int curr_offset, int numOfEle) {
 	// fwrite (m, sizeof(struct meta*), h.num_elts, fp);
 	fwrite (m, sizeof(struct meta*), h.num_elts, write_ptr);
 
+	fseek(write_ptr, 0, SEEK_SET);
 	char buffer[2048];
-
-
-		/* File was opened successfully. */
-		
-		/* Attempt to read */
-	while (fread(buffer, sizeof *buffer, 4, write_ptr) == 4) {
+	while (fread(buffer, sizeof *buffer, 1, write_ptr) != 0) {
 		/* byte swap here */
 		printf("%s\n", buffer);
 	}
