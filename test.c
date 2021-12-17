@@ -72,7 +72,7 @@ void addHeader() {
 }
 
 void addMeta() {
-	write_ptr = fopen("test.bin","wb");  // w for write, b for binary
+	write_ptr = fopen("test.bin","r+b");  // w for write, b for binary
 	fseek(write_ptr, 17, SEEK_SET);
 	fwrite (&metaRecords, sizeof(struct meta)*20, 1, write_ptr);
 	fclose(write_ptr);
