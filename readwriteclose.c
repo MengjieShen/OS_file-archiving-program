@@ -54,9 +54,9 @@ int copyAndWrite(char fromFile[],char* toFile, struct meta record)
 		// printf("size:%d\n", record.size);
 		// printf("offset:%d\n", record.offset);
 	}
-
+	
 	close(from);
 	close(to);
-	return(1);
+	return statbuf.st_size;
 
 }
