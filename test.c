@@ -144,6 +144,7 @@ void updateHeader(int offset, int numOfEle) {
 
 	// Update current header
 	fread (&h, sizeof(struct header), 1, write_ptr);
+	// printf("update header meta offset check : %d\n", h.meta_offset);
 	old_offset = h.meta_offset;
 	h.meta_offset = offset;
 	int size = offset - old_offset;
@@ -189,10 +190,10 @@ void updateHeader(int offset, int numOfEle) {
 }
 
 void read_metadata(){
-    struct meta * m;
+    struct meta m;
 	struct header h;
 	write_ptr = fopen("test.bin","rb");  // w for write, b for binary
-    m = (struct meta*) malloc(sizeof(struct meta));
+    // m = (struct meta*) malloc(sizeof(struct meta));
 	// Update current header
 	fread (&h, sizeof(struct header), 1, write_ptr);
 	int meta_offset = h.meta_offset;
@@ -205,7 +206,8 @@ void read_metadata(){
 	printf("meta file test : %d\n", meta.size);
 	printf("meta file test : %d\n", meta.offset);
 	fclose(write_ptr);
-	free(m);
+	// free(h);
+	// free(m);
 }
 
 int main () {
