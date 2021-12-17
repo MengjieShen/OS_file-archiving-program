@@ -78,7 +78,7 @@ int breakDir ( char dirname []) {
 	header.num_elts = 0;
 	// printf("header meta offset : %d", header.meta_offset); //12
 	// write the header
-	write_ptr = fopen("test.bin","a+b");  // w for write, b for binary
+	write_ptr = fopen("test.bin","w+b");  // w for write, b for binary
     fwrite(&header, sizeof(struct header), 1, write_ptr);
 	fclose(write_ptr);
 	//update current pointer 
