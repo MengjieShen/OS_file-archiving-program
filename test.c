@@ -56,10 +56,6 @@ int copyAndWrite(char fromFile[],char* toFile, int index)
 		dataOffset+=statbuf.st_size;
 		header.meta_offset += statbuf.st_size;
 		header.num_elts += 1;
-		// printf("2. name:%s\n", metaRecords[index].name);
-		// printf("2. parent_folder:%s\n", metaRecords[index].parent_folder);
-		// printf("2. size:%d\n", metaRecords[index].size);
-		// printf("2. offset:%d\n", metaRecords[index].offset);
 	}
 	
 	close(from);
@@ -168,6 +164,9 @@ void updateHeader(int curr_offset, int numOfEle) {
 	}
 	fseek (write_ptr, old_offset, SEEK_SET);
 	fwrite (m, sizeof(struct meta*), h.num_elts, write_ptr);
+
+	printf("Current header.meta_offset: %d\n", h.meta_offset);
+	printf("Current header.num_elts: %d\n", h.num_elts);
 
 	fclose(write_ptr);
 
