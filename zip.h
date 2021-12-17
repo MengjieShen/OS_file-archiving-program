@@ -1,9 +1,9 @@
 // int copyAndWrite(char fromFile[], char*toFile, int index);
 struct meta {
-  char name[200];
+  char name[20];
   int size;
   int offset;
-  char parent_folder[200];
+  char parent[20];
 } meta;
 
 struct header {
