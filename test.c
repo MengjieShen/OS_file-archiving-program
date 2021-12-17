@@ -170,11 +170,12 @@ void read_metadata(){
 	// Update current header
 	fread (&h, sizeof(struct header), 1, write_ptr);
 	printf("meta offset from reading header: %d \n", h.meta_offset);
-	fseek (write_ptr, h.meta_offset, SEEK_SET);
-	// fread(&m, sizeof(struct meta), 1, write_ptr);
+	fseek (write_ptr, 17, SEEK_SET);
+	// // fread(&m, sizeof(struct meta), 1, write_ptr);
 	fread(&metas, sizeof(struct meta)*20, 1, write_ptr);
 
-	printf("meta file SIZE : %d\n", metas[0].size);
+	printf("meta file name : %s\n", metas[0].name);
+	printf("meta file name : %d\n", metas[0].size);
 	// printf("meta file test : %s\n", m.parent);
 	// printf("meta file test : %d\n", m.size);
 	// printf("meta file test : %d\n", m.offset);
