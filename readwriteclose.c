@@ -42,7 +42,6 @@ int copyAndWrite(char fromFile[],char* toFile, int index)
 
 	//read from the "from" file and write into the "to" file
 	while((n=read(from, buf, sizeof(buf)))>0) {
-		// printf("line being written: %s\n", buf);
 		write(to,buf,n);
 	}
 		

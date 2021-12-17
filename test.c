@@ -3,8 +3,6 @@
 # include <sys/types.h>
 # include <dirent.h>
 # include <string.h>
-# include <stdio.h>
-# include <string.h>
 # include <stdlib.h>
 # include <fcntl.h>
 # include <unistd.h>
@@ -17,6 +15,58 @@
 // 3. directory -> dir: recursively, append all files in the lowest level, return a file to the upper level,
 FILE * write_ptr;
 struct meta metaRecords[20];
+int dataOffset = 0;
+
+int copyAndWrite(char fromFile[],char* toFile, int index)
+{	
+	int n, from , to;
+	char buf[BUFFSIZE];
+	memset(buf, 0, BUFFSIZE);
+	mode_t fdmode = S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH;
+	struct stat statbuf ;
+
+	// printf("1. name:%s\n", metaRecords[index].name);
+	// printf("1. parent_folder:%s\n", metaRecords[index].parent_folder);
+	// printf("1. size:%d\n", metaRecords[index].size);
+	// printf("1. offset:%d\n", metaRecords[index].offset);
+	//open the "from" source file
+	if ((from = open(fromFile , O_RDONLY)) < 0)
+	{
+		perror("open1");
+		exit(1);
+	}
+
+	//open the "to" destiantion file
+	if ((to = open(toFile , O_WRONLY|O_CREAT|O_APPEND, fdmode)) < 0)
+	{
+		perror("open2");
+		exit(1);
+	}
+
+	//read from the "from" file and write into the "to" file
+	while((n=read(from, buf, sizeof(buf)))>0) {
+		write(to,buf,n);
+	}
+		
+	
+	if (stat (fromFile , &statbuf ) == -1) perror("stat");
+	else {
+		metaRecords[index].size = statbuf.st_size;
+		metaRecords[index].offset = dataOffset;
+		dataOffset+=statbuf.st_size;
+		header.meta_offset += statbuf.st_size;
+		header.num_elts += 1;
+		// printf("2. name:%s\n", metaRecords[index].name);
+		// printf("2. parent_folder:%s\n", metaRecords[index].parent_folder);
+		// printf("2. size:%d\n", metaRecords[index].size);
+		// printf("2. offset:%d\n", metaRecords[index].offset);
+	}
+	
+	close(from);
+	close(to);
+	return statbuf.st_size;
+
+}
 
 int breakDir ( char dirname []) {
 
@@ -27,7 +77,6 @@ int breakDir ( char dirname []) {
 	// struct meta metaRecords[20];
 	DIR * dir_ptr ;
 	struct dirent *direntp ;
-	char const* mytest = "mytest";
 	FILE * fp;
 	mode_t fdmode = S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH;
 	int count=0, i=0, fileCnt = 0;		
@@ -37,11 +86,9 @@ int breakDir ( char dirname []) {
 	header.num_elts = 0;
 
 	// write the header
-
 	write_ptr = fopen("test.bin","wb");  // w for write, b for binary
     fwrite(&header, sizeof(struct header), 1, write_ptr);
-    // printf("num_of_eles:%d\n", header.num_elts);
-
+	fclose(write_ptr);
 	//update current pointer 
 	curr_offset += sizeof(header);
 
@@ -62,10 +109,8 @@ int breakDir ( char dirname []) {
 
 			// new record
 			struct meta* curr = (struct meta*)malloc(sizeof(struct meta));
-			metaRecords[i] = *curr;
-			strcpy(curr->name, direntp -> d_name);
-			strcpy(curr->parent_folder, dirname);
-			// if (count !=3 ) metaRecords[i-1].next = &metaRecords[i];
+			strcpy(metaRecords[fileCnt].name, direntp -> d_name);
+			strcpy(metaRecords[fileCnt].parent_folder, dirname);
 
 			// get the stat information for current directory
 			stat(source, &st);
@@ -73,7 +118,7 @@ int breakDir ( char dirname []) {
 			// if file or dir
 			// if file
 			if ((st.st_mode & S_IFMT) == S_IFREG){
-				curr_offset += copyAndWrite(source, "test.bin", i);
+				curr_offset += copyAndWrite(source, "test.bin", fileCnt);
 				fileCnt++;
 			}
     
@@ -81,14 +126,13 @@ int breakDir ( char dirname []) {
         	{
 			// if dir -> breakDir : count+=fileCnt
 				fileCnt += breakDir(source);
-        	}
-				// printf("\n\nfile count test: %d\n\n", fileCnt);
-				
+        	}				
 
 		}
 		updateHeader(curr_offset, fileCnt);
 		closedir (dir_ptr);
 	}
+
 
 	return fileCnt;
 }
@@ -100,57 +144,51 @@ void updateHeader(int curr_offset, int numOfEle) {
     struct meta * m;
 	struct header h;
     char path[300];
-    // FILE *fp = fopen("mytest", "w+");
-	write_ptr = fopen("test.bin","w+b");  // w for write, b for binary
+	write_ptr = fopen("test.bin","a+b");  // w for write, b for binary
     m = (struct meta*) malloc(sizeof(struct meta));
 
 	// Update current header
-	// fread (&h, sizeof(struct header), 1, fp);
 	fread (&h, sizeof(struct header), 1, write_ptr);
-	// printf("num_of_eles: %d\n", h.num_elts);
 	old_offset = h.meta_offset;
 	h.meta_offset = curr_offset;
 	int size = curr_offset - old_offset;
-	// fseek (fp, (-1)*(sizeof(struct header)), SEEK_CUR);
 	fseek (write_ptr, (-1)*(sizeof(struct header)), SEEK_CUR);
-	// fwrite (&h, sizeof(struct header), 1, fp);
 	fwrite (&h, sizeof(struct header), 1, write_ptr);
-	// printf("meta_offset:%d\n", h.meta_offset);
-	// printf("old_offset:%d\n", old_offset);
 
-	// update header's metadata
-	// fseek (fp, old_offset, SEEK_SET);
+	// Update current meta records
 	fseek (write_ptr, old_offset, SEEK_SET);
-	// printf("\n\n header num elements:%d", h.num_elts);
 	h.num_elts = 0;
 	int ele = h.num_elts;
-	// printf("\n\n old num elements:%d", ele);
 	h.num_elts = ele + numOfEle;
-	// printf("\n\n new num elements:%d", h.num_elts);
-	
 	m = realloc(m, sizeof(struct meta*) * h.num_elts);
-	// fread (m, sizeof(struct meta*), h.num_elts, fp);
 	fread (m, sizeof(struct meta*), h.num_elts, write_ptr);
 	for (i = 0; i < h.num_elts; ++i)
 	{
 		m[i].offset += size;
 	}
-	// fseek (fp, old_offset, SEEK_SET);
 	fseek (write_ptr, old_offset, SEEK_SET);
-	// fwrite (m, sizeof(struct meta*), h.num_elts, fp);
 	fwrite (m, sizeof(struct meta*), h.num_elts, write_ptr);
 
+	fclose(write_ptr);
+
+	write_ptr = fopen("test.bin","rb");
+	// read from the beginning
 	fseek(write_ptr, 0, SEEK_SET);
 	char buffer[2048];
-	while (fread(buffer, sizeof *buffer, 1, write_ptr) != 0) {
-		/* byte swap here */
-		printf("%s\n", buffer);
+	int j;
+	for (j=0; j<20; j++) {
+		printf("j: %d\n", j);
+		printf("name:%s\n", metaRecords[j].name);
+		printf("parent_folder:%s\n", metaRecords[j].parent_folder);
+		printf("size:%d\n", metaRecords[j].size);
+		printf("offset:%d\n", metaRecords[j].offset);
 	}
-
+	// while (fread(buffer, sizeof *buffer, 1, write_ptr) != 0) {
+	// 	printf("%s\n", buffer);
+	// }
 
     // clean up
 	fclose(write_ptr);
-    // fclose(fp);
     free(m);
 }
 
