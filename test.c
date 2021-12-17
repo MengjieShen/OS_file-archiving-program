@@ -22,7 +22,6 @@ int breakDir ( char dirname []) {
 	struct header header;
 	float curr_offset = 0;
 	struct stat st;
-	// header length: sizeof(int)
 
 	struct meta metaRecords[20];
 	DIR * dir_ptr ;
@@ -37,10 +36,6 @@ int breakDir ( char dirname []) {
 	header.num_elts = 0;
 
 	// write the header
-    // fp = fopen(mytest, "w+");
-    // // fwrite(&header, sizeof(header), 1, fp);
-	// fwrite(&header, sizeof(header), 1, write_ptr);
-    // fclose(fp);
 
 	write_ptr = fopen("test.bin","wb");  // w for write, b for binary
     fwrite(&header, sizeof(struct header), 1, write_ptr);
@@ -48,7 +43,6 @@ int breakDir ( char dirname []) {
 
 	//update current pointer 
 	curr_offset += sizeof(header);
-	// data_offset = sizeof(header);
 
 	if ((dir_ptr = opendir (dirname)) == NULL)
 		fprintf (stderr , " cannot open %s \n",dirname);
@@ -60,32 +54,33 @@ int breakDir ( char dirname []) {
 			printf ("inode %d of the entry %s \n", (int) direntp ->d_ino , direntp -> d_name );
 
 			// name to be found
-			char source[1024] = "testDir/";
-			strcat(source ,direntp -> d_name);
+			char source[1024];
+			strcpy(source, dirname);
+			strcat(source, "/");
+			strcat(source, direntp -> d_name);
 
 			// new record
 			struct meta* curr = (struct meta*)malloc(sizeof(struct meta));
 			metaRecords[i] = *curr;
 			strcpy(curr->name, direntp -> d_name);
 			strcpy(curr->parent_folder, dirname);
-			if (count !=3 ) metaRecords[i-1].next = &metaRecords[i];
-			
+			// if (count !=3 ) metaRecords[i-1].next = &metaRecords[i];
 
 			// get the stat information for current directory
 			stat(source, &st);
 
-
 			// if file or dir
 			// if file
 			if ((st.st_mode & S_IFMT) == S_IFREG){
-				curr_offset += copyAndWrite(source, mytest, *curr);
+				curr_offset += copyAndWrite(source, "test.bin", *curr);
 				fileCnt++;
 			}
     
 			else if ((st.st_mode & S_IFMT) == S_IFDIR)
         	{
 			// if dir -> breakDir : count+=fileCnt
-				count+=breakDir(source);
+				fileCnt += breakDir(source);
+				printf("File count counting dir A: %d\n", fileCnt);
         	}
 				printf("\n\nfile count test: %d\n\n", fileCnt);
 				
@@ -94,14 +89,6 @@ int breakDir ( char dirname []) {
 		updateHeader(curr_offset, fileCnt);
 		closedir (dir_ptr);
 	}
-
-	// int to;
-	// if ((to = open(mytest , O_WRONLY|O_CREAT|O_APPEND, fdmode)) < 0)
-	// {
-	// 	perror("open2");
-	// 	exit(1);
-	// }
-	// write(to, metaRecords, sizeof(struct meta)*20);
 
 	return fileCnt;
 }
@@ -120,7 +107,7 @@ void updateHeader(int curr_offset, int numOfEle) {
 	// Update current header
 	// fread (&h, sizeof(struct header), 1, fp);
 	fread (&h, sizeof(struct header), 1, write_ptr);
-	printf("num_of_eles: %d\n", h.num_elts);
+	// printf("num_of_eles: %d\n", h.num_elts);
 	old_offset = h.meta_offset;
 	h.meta_offset = curr_offset;
 	int size = curr_offset - old_offset;
