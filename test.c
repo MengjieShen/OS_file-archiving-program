@@ -167,7 +167,6 @@ void updateHeader(int curr_offset, int numOfEle) {
 
 	printf("Current header.meta_offset: %d\n", h.meta_offset);
 	// printf("Current header.num_elts: %d\n", h.num_elts);
-
 	fclose(write_ptr);
 
 	write_ptr = fopen("test.bin","rb");
@@ -204,7 +203,9 @@ void read_metadata(){
 	printf("meta_offset %d \n", h.meta_offset);
 	fseek (write_ptr, meta_offset, SEEK_SET);
 	fread(&meta, sizeof(struct meta), 1, write_ptr);
-	printf("meta file test: %s", meta.name);
+	printf("size of meta: %lu", sizeof(meta));
+	printf("meta file test 12 : %s\n", meta.name);
+
 	fclose(write_ptr);
 	free(m);
 }

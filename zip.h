@@ -3,10 +3,7 @@ struct meta {
   char name[200];
   int size;
   int offset;
-  int dir;
   char parent_folder[200];
-  struct meta* next;
-  struct meta* child;
 } meta;
 
 struct header {
