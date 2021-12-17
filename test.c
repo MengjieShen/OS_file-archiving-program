@@ -166,7 +166,7 @@ void updateHeader(int curr_offset, int numOfEle) {
 	fwrite (m, sizeof(struct meta*), h.num_elts, write_ptr);
 
 	printf("Current header.meta_offset: %d\n", h.meta_offset);
-	printf("Current header.num_elts: %d\n", h.num_elts);
+	// printf("Current header.num_elts: %d\n", h.num_elts);
 
 	fclose(write_ptr);
 
@@ -175,13 +175,13 @@ void updateHeader(int curr_offset, int numOfEle) {
 	fseek(write_ptr, 0, SEEK_SET);
 	char buffer[2048];
 	int j;
-	for (j=0; j<20; j++) {
-		printf("j: %d\n", j);
-		printf("name:%s\n", metaRecords[j].name);
-		printf("parent_folder:%s\n", metaRecords[j].parent_folder);
-		printf("size:%d\n", metaRecords[j].size);
-		printf("offset:%d\n", metaRecords[j].offset);
-	}
+	// for (j=0; j<20; j++) {
+	// 	printf("j: %d\n", j);
+	// 	printf("name:%s\n", metaRecords[j].name);
+	// 	printf("parent_folder:%s\n", metaRecords[j].parent_folder);
+	// 	printf("size:%d\n", metaRecords[j].size);
+	// 	printf("offset:%d\n", metaRecords[j].offset);
+	// }
 	// while (fread(buffer, sizeof *buffer, 1, write_ptr) != 0) {
 	// 	printf("%s\n", buffer);
 	// }
@@ -191,10 +191,26 @@ void updateHeader(int curr_offset, int numOfEle) {
     free(m);
 }
 
+void read_metadata(){
+    struct meta * m;
+	struct header h;
+    // FILE *fp = fopen("mytest", "w+");
+	write_ptr = fopen("test.bin","rb");  // w for write, b for binary
+    m = (struct meta*) malloc(sizeof(struct meta));
+	// Update current header
+	// fread (&h, sizeof(struct header), 1, fp);
+	fread (&h, sizeof(struct header), 1, write_ptr);
+	int meta_offset = h.meta_offset;
+	printf("meta_offset %d \n", h.meta_offset);
+	fseek (write_ptr, meta_offset, SEEK_SET);
+	fread(&meta, sizeof(struct meta), 1, write_ptr);
+	printf("meta file test: %s", meta.name);
+	fclose(write_ptr);
+	free(m);
+}
+
 int main () {
 	char dirName[] = "testDir";	
 	breakDir (dirName);
-	
-
-		
+	read_metadata();
 }
