@@ -17,50 +17,34 @@
 // 2. directory -> file: append every file
 // 3. directory -> dir: recursively, append all files in the lowest level, return a file to the upper level,
 
-// int copyAndWrite(char fromFile[],char* toFile, int index)
-// {
-// 	int n, from , to;
-// 	char buf[BUFFSIZE];
-// 	mode_t fdmode = S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH;
-
-// 	//open the "from" source file
-// 	if ((from = open(fromFile , O_RDONLY)) < 0)
-// 	{
-// 		perror("open1");
-// 		printf("Vivi");
-// 		exit(1);
-// 	}
-
-// 	//open the "to" destiantion file
-// 	if ((to = open(toFile , O_WRONLY|O_CREAT|O_APPEND, fdmode)) < 0)
-// 	{
-// 		perror("open2");
-// 		exit(1);
-// 	}
-
-// 	//read from the "from" file and write into the "to" file
-// 	while((n=read(from, buf, sizeof(buf)))>0)
-// 		write(to,buf,n);
-
-// 	metaRecords[index].size = buf.st_size;
-// 	metaRecords[index].offset = dataOffset;
-// 	dataOffset+=buf.st_size;
-
-// 	close(from);
-
-// 	write(to, metaRecords, sizeof(struct meta)*20);
-
-// 	close(to);
-// 	return(1);
-
-// }
 
 void do_ls ( char dirname []) {
+
+	struct header header;
+	float curr_offset = 0;
+
 	struct meta metaRecords[20];
 	DIR * dir_ptr ;
 	struct dirent *direntp ;
 	char const* mytest = "mytest";
+	FILE * fp;
 	mode_t fdmode = S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH;
+
+
+    // Create header
+    header.meta_offset = sizeof(header);                  // is curr_offset viable right now -- no it is not
+    header.next = -1;
+    header.num_elts = 1;
+
+	// write the header
+    fp = fopen(mytest, "w+");
+    fwrite(&header, sizeof(header), 1, fp);
+    fclose(fp);
+
+	//update current pointer 
+	curr_offset += sizeof(header);
+
+	
 
 	if ((dir_ptr = opendir (dirname)) == NULL)
 		fprintf (stderr , " cannot open %s \n",dirname);
@@ -98,7 +82,9 @@ void do_ls ( char dirname []) {
 }
 
 int main () {
-	char dirName[] = "testDir";
+	char dirName[] = "testDir";	
 	do_ls (dirName);
 	
+
+		
 }

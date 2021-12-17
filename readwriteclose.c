@@ -27,7 +27,7 @@ int copyAndWrite(char fromFile[],char* toFile, struct meta record)
 	if ((from = open(fromFile , O_RDONLY)) < 0)
 	{
 		perror("open1");
-		printf("Vivi");
+		// printf("Vivi");
 		exit(1);
 	}
 
@@ -47,7 +47,8 @@ int copyAndWrite(char fromFile[],char* toFile, struct meta record)
 		record.size = statbuf.st_size;
 		record.offset = dataOffset;
 		dataOffset+=statbuf.st_size;
-
+		header.meta_offset += statbuf.st_size;
+		header.num_elts += 1;
 		// printf("name:%s\n", record.name);
 		// printf("parent_folder:%s\n", record.parent_folder);
 		// printf("size:%d\n", record.size);
