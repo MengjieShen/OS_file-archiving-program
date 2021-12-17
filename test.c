@@ -61,16 +61,19 @@ int copyAndWrite(char fromFile[],char* toFile, int index)
 
 }
 
-void addHeaderMeta() {
+void addHeader() {
 	struct header header;
 	header.meta_offset = sizeof(struct header);                  // is curr_offset viable right now -- no it is not
 	header.num_elts = 0;
 	// write the header
 	write_ptr = fopen("test.bin","wb");  // w for write, b for binary
     fwrite(&header, sizeof(struct header), 1, write_ptr);
+	fclose(write_ptr);
+}
 
-	// Update current meta records
-	fseek (write_ptr, header.meta_offset, SEEK_SET);
+void addMeta() {
+	write_ptr = fopen("test.bin","wb");  // w for write, b for binary
+	fseek(write_ptr, 17, SEEK_SET);
 	fwrite (&metaRecords, sizeof(struct meta)*20, 1, write_ptr);
 	fclose(write_ptr);
 }
@@ -100,10 +103,6 @@ void breakDir ( char dirname []) {
 			strcpy(source, dirname);
 			strcat(source, "/");
 			strcat(source, direntp -> d_name);
-
-			// new record
-			// printf("parent test %s\n", metaRecords[fileCnt].parent);
-
 			// get the stat information for current directory
 			stat(source, &st);
 
@@ -113,23 +112,12 @@ void breakDir ( char dirname []) {
 				strcpy(metaRecords[fileCnt].name, direntp -> d_name);
 				strcpy(metaRecords[fileCnt].parent, dirname);
 				copyAndWrite(source, "test.bin", fileCnt);
-				// printf("current file offset after adding f.txt: %f\n", curr_offset);
-				// printf("\n\n\nmetacheck\n\n\n");
-				// printf("meta index: %d\n", fileCnt);
-				// printf("meta name: %s\n", metaRecords[fileCnt].name);
-				// printf("meta parent: %s\n", metaRecords[fileCnt].parent);
-				// printf("meta size: %d\n", metaRecords[fileCnt].size);
-				// printf("meta offset: %d\n", metaRecords[fileCnt].offset);
 				fileCnt++;
 			}
 			// if dir
-			else if ((st.st_mode & S_IFMT) == S_IFDIR)
-        	{
-				breakDir(source);
-        	}				
+			else if ((st.st_mode & S_IFMT) == S_IFDIR) breakDir(source);
 
 		}
-		
 		updateHeader(dataOffset, fileCnt);
 		closedir (dir_ptr);
 	}
@@ -151,42 +139,26 @@ void updateHeader(int offset, int numOfEle) {
 	old_offset = h.meta_offset;
 	h.meta_offset = offset;
 	int size = offset - old_offset;
-	fseek (write_ptr, (-1)*(sizeof(struct header)), SEEK_CUR);
+	// fseek (write_ptr, (-1)*(sizeof(struct header)), SEEK_CUR);
+	fseek(write_ptr, 0, SEEK_SET);
 	fwrite (&h, sizeof(struct header), 1, write_ptr);
 
 	// Update current meta records
-	fseek (write_ptr, old_offset, SEEK_SET);
-	h.num_elts = 0;
-	int ele = h.num_elts;
-	h.num_elts = ele + numOfEle;
-	m = realloc(m, sizeof(struct meta*) * h.num_elts);
-	fread (m, sizeof(struct meta*), h.num_elts, write_ptr);
-	for (i = 0; i < h.num_elts; ++i)
-	{
-		m[i].offset += size;
-	}
-	fseek (write_ptr, old_offset, SEEK_SET);
-	fwrite (m, sizeof(struct meta*), h.num_elts, write_ptr);
-
-	// printf("Current header.meta_offset: %d\n", h.meta_offset);
-	// printf("Current header.num_elts: %d\n", h.num_elts);
-	fclose(write_ptr);
-
-	write_ptr = fopen("test.bin","rb");
-	// read from the beginning
-	fseek(write_ptr, 0, SEEK_SET);
-	// int j;
-	// for (j=0; j<2; j++) {
-	// 	printf("j: %d\n", j);
-	// 	printf("name:%s\n", metaRecords[j].name);
-	// 	printf("parent_folder:%s\n", metaRecords[j].parent);
-	// 	printf("size:%d\n", metaRecords[j].size);
-	// 	printf("offset:%d\n", metaRecords[j].offset);
+	// fseek (write_ptr, old_offset, SEEK_SET);
+	// h.num_elts = 0;
+	// int ele = h.num_elts;
+	// h.num_elts = ele + numOfEle;
+	// m = realloc(m, sizeof(struct meta*) * h.num_elts);
+	// fread (m, sizeof(struct meta*), h.num_elts, write_ptr);
+	// for (i = 0; i < h.num_elts; ++i)
+	// {
+	// 	m[i].offset += size;
 	// }
+	// fseek (write_ptr, old_offset, SEEK_SET);
+	// fwrite (m, sizeof(struct meta*), h.num_elts, write_ptr);
 
     // clean up
 	fclose(write_ptr);
-    free(m);
 }
 
 void read_metadata(){
@@ -197,24 +169,23 @@ void read_metadata(){
     // m = (struct meta*) malloc(sizeof(struct meta));
 	// Update current header
 	fread (&h, sizeof(struct header), 1, write_ptr);
-	int meta_offset = h.meta_offset;
 	printf("meta offset from reading header: %d \n", h.meta_offset);
-	fseek (write_ptr, meta_offset, SEEK_SET);
+	fseek (write_ptr, h.meta_offset, SEEK_SET);
 	// fread(&m, sizeof(struct meta), 1, write_ptr);
 	fread(&metas, sizeof(struct meta)*20, 1, write_ptr);
 
-	printf("meta file test : %d\n", metas[0].size);
+	printf("meta file SIZE : %d\n", metas[0].size);
 	// printf("meta file test : %s\n", m.parent);
 	// printf("meta file test : %d\n", m.size);
 	// printf("meta file test : %d\n", m.offset);
 	fclose(write_ptr);
-	// free(h);
-	// free(m);
+
 }
 
 int main () {
-	addHeaderMeta();
+	addHeader();
 	char dirName[] = "testDir/A";	
 	breakDir (dirName);
+	addMeta();
 	read_metadata();
 }
