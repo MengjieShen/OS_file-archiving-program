@@ -9,12 +9,17 @@ LIBS = -lm
 # ****************************************************
 # Entries to bring the executable up to date
 
-test: test.o readwriteclose.o 
-	$(CC) $(CFLAGS) -o test test.o readwriteclose.o 
+test: test.o help.o 
+	$(CC) $(CFLAGS) -o test test.o help.o 
 	
 test.o: test.c zip.h
 	$(CC) $(CFLAGS) -c test.c
 
-readwriteclose.o: readwriteclose.c zip.h
-	$(CC) $(CFLAGS) -c readwriteclose.c
+help.o: help.c zip.h
+	$(CC) $(CFLAGS) -c help.c
+
+clean: 
+	rm -f *~ *.o test a.out core main
+# readwriteclose.o: readwriteclose.c zip.h
+# 	$(CC) $(CFLAGS) -c readwriteclose.c
 

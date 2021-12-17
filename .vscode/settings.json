@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "string.h": "c"
+        "string.h": "c",
+        "zip.h": "c",
+        "filesystem": "c",
+        "random": "c"
     }
 }
