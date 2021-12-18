@@ -25,7 +25,7 @@ run2: adzip
 	./adzip -a "test.bin" tmp/"M/"
 
 run3: adzip
-	./adzip -x "test.bin" "/Users/shenmengjie/Documents/GitHub/OS_file-archiving-program/"
+	./adzip -x "test.bin" "/Users/shenmengjie/Documents/GitHub/OS_file-archiving-program/tmp/testDir/dirA/f.txt"
 
 run4: adzip
 	./adzip -m "test.bin" "testDir/"
