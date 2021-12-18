@@ -49,10 +49,10 @@ tmp* copyAndWrite(char* fromFile,char* toFile, tmp* tmp, meta metaRecords[20])
 	if (stat (fromFile , &statbuf ) == -1) perror("stat");
 	else {
 		metaRecords[index].size = statbuf.st_size;
+		dataOffset += statbuf.st_size;
 		metaRecords[index].offset = dataOffset;
 		// metaRecords[index].offset = metaRecords[index-1].offset + statbuf.st_size;
 		metaRecords[index].permissions = statbuf.st_mode;
-		dataOffset += statbuf.st_size;
 	}
 	close(from);
 	close(to);
@@ -237,6 +237,7 @@ tmp* recursiveDir ( char* dirname, char* archive_file, char* parent, tmp* tmp, m
 	// get the stat information for current directory
 		stat(dirname, &st);
 		if((st.st_mode & S_IFMT) == S_IFDIR){
+			// printf("this is directory, %s, index: %d", trimmer(dirname), indexCount);
 			metaRecords[indexCount].isFile = false;
 			strcpy(metaRecords[indexCount].name, trimmer(dirname));
 			strcpy(metaRecords[indexCount].parent, trimmer(parent));
@@ -258,8 +259,8 @@ tmp* recursiveDir ( char* dirname, char* archive_file, char* parent, tmp* tmp, m
 				strcpy(metaRecords[indexCount].name, direntp -> d_name);
 				strcpy(metaRecords[indexCount].parent, trimmer(dirname));
 				metaRecords[indexCount].isFile = true;
-
 				tmp = copyAndWrite(source, archive_file, tmp, metaRecords);
+				printf("test!!!!!!!%d", tmp ->dataOffset);
 				indexCount = tmp->index;
 			}
 			// if dir
@@ -279,6 +280,7 @@ void archive(char* archive_file, char* dirname){
 	struct tmp* tmp;
 	tmp = (struct tmp*) malloc(sizeof(struct tmp));
 	tmp -> dataOffset = sizeof(header);
+	// printf("tmp off set %d", tmp->dataOffset);
 	tmp -> index = 0;
 	tmp = recursiveDir(dirname, archive_file, "..", tmp, metaRecords);
 	updateHeader(tmp->dataOffset, tmp->index, archive_file);

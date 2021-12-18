@@ -31,7 +31,7 @@ run4: adzip
 	./adzip -m "test.bin" "testDir/"
 
 run5: adzip
-	./adzip -p "test.bin" "testDir/"
+	./adzip -p "test.bin" "tmp/testDir/"
 
 
 clean: 
