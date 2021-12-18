@@ -9,7 +9,12 @@ typedef struct meta {
   mode_t permissions;
 } meta;
 
-struct header {
+typedef struct tmp{
+  int dataOffset;
+  int index;
+}tmp;
+
+typedef struct header {
   int num_elts; //total elements including directories
   int meta_offset;
   int next;
@@ -17,7 +22,7 @@ struct header {
 
 struct meta metaRecords[20];
 
-int copyAndWrite(char* fromFile,char* toFile, int index);
+tmp* copyAndWrite(char* fromFile,char* toFile, tmp* tmp);
 void updateHeader(int offset, int numOfEle, char* archive_file);
 char * trimmer(char * str);
 void addHeader(char* archive_file);
@@ -27,3 +32,5 @@ void read_metadata(char* archive_file);
 void extract(char root[1024], char path[1024], char* archive_file);
 void extractfile(char path[1024], char* archive_file, int offset, int size, int permissions);
 void traverse(char* archive_file, char* dirname, int count);
+tmp* recursiveDir ( char* dirname, char* archive_file, char* parent, tmp* tmp);
+void archive(char* archive_file, char* dirname);

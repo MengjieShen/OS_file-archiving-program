@@ -12,17 +12,19 @@
 # define BUFFSIZE 1024
 
 FILE * write_ptr;
-int dataOffset = sizeof(header);
-int fileCnt = 0;
+// int dataOffset = sizeof(header);
+// int fileCnt = 0;
 
-int copyAndWrite(char* fromFile,char* toFile, int index)
+tmp* copyAndWrite(char* fromFile,char* toFile, tmp* tmp)
 {	
-	int n, from , to;
+	int n, from , to, index, dataOffset;
 	char buf[BUFFSIZE];
 	memset(buf, 0, BUFFSIZE);
 	mode_t fdmode = S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH;
 	struct stat statbuf ;
 
+	index = tmp->index;
+	dataOffset = tmp->dataOffset;
 	//open the "from" source file
 	if ((from = open(fromFile , O_RDONLY)) < 0)
 	{
@@ -48,19 +50,22 @@ int copyAndWrite(char* fromFile,char* toFile, int index)
 	else {
 		metaRecords[index].size = statbuf.st_size;
 		metaRecords[index].offset = dataOffset;
+		// metaRecords[index].offset = metaRecords[index-1].offset + statbuf.st_size;
 		metaRecords[index].permissions = statbuf.st_mode;
 		dataOffset += statbuf.st_size;
 	}
-	
 	close(from);
 	close(to);
-	return statbuf.st_size;
-
+	tmp->dataOffset =  dataOffset;
+	// printf("tmp -> index %d\n" , tmp->index);
+	tmp->index ++;
+	// printf("tmp -> index %d\n" , tmp->index);
+	return tmp;
 }
 
 void addHeader(char* archive_file) {
 	struct header header;
-	header.meta_offset = sizeof(struct header);                  // is curr_offset viable right now -- no it is not
+	header.meta_offset = sizeof(struct header);                   
 	header.num_elts = 0;
 	// write the header
 	write_ptr = fopen(archive_file,"wb");  // w for write, b for binary
@@ -78,80 +83,21 @@ void addMeta(char* archive_file) {
 	fclose(write_ptr);
 }
 
-void breakDir ( char* dirname, char* archive_file, char* parent) {
-	float curr_offset = 0;
-	struct stat st;
-	DIR * dir_ptr ;
-	struct dirent *direntp ;
-	mode_t fdmode = S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH;
-	int count=0, i=0;		
-    // Create header
-	// meta_offset: meta开始的地方
-
-	if ((dir_ptr = opendir (dirname)) == NULL)
-		fprintf (stderr , " cannot open %s \n",dirname);
-	else {
-	// get the stat information for current directory
-		stat(dirname, &st);
-		if((st.st_mode & S_IFMT) == S_IFDIR){
-			metaRecords[fileCnt].isFile = false;
-			strcpy(metaRecords[fileCnt].name, trimmer(dirname));
-			strcpy(metaRecords[fileCnt].parent, trimmer(parent));
-			metaRecords[fileCnt].permissions =  st.st_mode;
-		// 	// header.num_elts += 1;
-			fileCnt++;
-		}
-		while ((direntp = readdir (dir_ptr)) != NULL ) {
-            //get the inode number and file name
-			count++;
-			if (count < 3) continue;
-			printf ("inode %d of the entry %s \n", (int) direntp ->d_ino , direntp -> d_name );
-
-			// name to be found
-			char source[1024];
-			strcpy(source, dirname);
-			strcat(source, "/");
-			strcat(source, direntp -> d_name);
-			stat(source, &st);
-			// if file
-			if ((st.st_mode & S_IFMT) == S_IFREG){
-				// printf("filecnt: %s", source);
-				// struct meta* curr = (struct meta*)malloc(sizeof(struct meta));
-				strcpy(metaRecords[fileCnt].name, direntp -> d_name);
-				strcpy(metaRecords[fileCnt].parent, trimmer(dirname));
-				metaRecords[fileCnt].isFile = true;
-				copyAndWrite(source, archive_file, fileCnt);
-				fileCnt++;
-				
-			}
-			// if dir
-			else if ((st.st_mode & S_IFMT) == S_IFDIR){
-				breakDir(source, archive_file, dirname);
-			} 
-		}
-		closedir (dir_ptr);
-	}
-
-}
-
 void updateHeader(int offset, int numOfEle, char* archive_file) {
     int i;
     int old_offset, old_next;
-    struct meta * m;
+    // struct meta * m;
 	struct header h;
     char path[300];
 	write_ptr = fopen(archive_file,"r+b");  // w for write, b for binary
-    m = (struct meta*) malloc(sizeof(struct meta));
+    // m = (struct meta*) malloc(sizeof(struct meta));
 
 	// Update current header
 	fread (&h, sizeof(struct header), 1, write_ptr);
 	h.num_elts += numOfEle;
-	// printf("update header meta offset check : %d\n", h.meta_offset);
 	old_offset = h.meta_offset;
 	h.meta_offset = offset;
-	// printf("update header meta offset check : %d\n", h.meta_offset);
 	int size = offset - old_offset;
-	// fseek (write_ptr, (-1)*(sizeof(struct header)), SEEK_CUR);
 	fseek(write_ptr, 0, SEEK_SET);
 	fwrite (&h, sizeof(struct header), 1, write_ptr);
 
@@ -170,7 +116,7 @@ void updateHeader(int offset, int numOfEle, char* archive_file) {
 	// fwrite (m, sizeof(struct meta*), h.num_elts, write_ptr);
 
     // clean up
-	free(m);
+	// free(m);
 	fclose(write_ptr);
 }
 
@@ -185,6 +131,8 @@ void read_metadata(char* archive_file){
 	fseek (write_ptr, h.meta_offset, SEEK_SET);
 	// // fread(&m, sizeof(struct meta), 1, write_ptr);
 	fread(&metas, sizeof(struct meta)*20, 1, write_ptr);
+	printf("=======================================================\n");
+    printf("=======================================================\n");
 	for (int i = 0; i< h.num_elts; i++){
 		if(metas[i].isFile){
 			printf("\nFile: ");
@@ -199,13 +147,13 @@ void read_metadata(char* archive_file){
 			printf("parent : %s ", metas[i].parent);
 			printf("permission: %d ", metas[i].permissions);
 		}
+		printf("\n=======================================================\n");
 	}
 	fclose(write_ptr);
 	// return metas;
 }
 
 void extractfile(char path[1024], char* archive_file, int offset, int size, int permissions){
-	int n;
 	write_ptr = fopen(archive_file,"r+b");
 	FILE * extract_ptr;
 	printf("path %s", path);
@@ -288,22 +236,105 @@ void traverse(char* archive_file, char* dirname, int count){
 	}
 }
 
+tmp* recursiveDir ( char* dirname, char* archive_file, char* parent, tmp* tmp) {
+	int indexCount, dataOffset;
+	indexCount = tmp->index;
+	// printf("indexCount%d\n" , indexCount);
+	dataOffset = tmp->dataOffset;
+	struct stat st;
+	DIR * dir_ptr ;
+	struct dirent *direntp ;
+	mode_t fdmode = S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH;
+	int count=0, i=0;		
+	if ((dir_ptr = opendir (dirname)) == NULL)
+		fprintf (stderr , " cannot open %s \n",dirname);
+	else {
+	// get the stat information for current directory
+		stat(dirname, &st);
+		if((st.st_mode & S_IFMT) == S_IFDIR){
+			metaRecords[indexCount].isFile = false;
+			strcpy(metaRecords[indexCount].name, trimmer(dirname));
+			strcpy(metaRecords[indexCount].parent, trimmer(parent));
+			metaRecords[indexCount].permissions =  st.st_mode;
+			indexCount++;
+			tmp->index = indexCount;
+		}
+		while ((direntp = readdir (dir_ptr)) != NULL ) {
+			count++;
+			if (count < 3) continue;
+			// printf ("inode %d of the entry %s index %d\n", (int) direntp ->d_ino , direntp -> d_name, indexCount );
+			char source[1024];
+			strcpy(source, dirname);
+			strcat(source, "/");
+			strcat(source, direntp -> d_name);
+			stat(source, &st);
+			// if file
+			if ((st.st_mode & S_IFMT) == S_IFREG){
+				strcpy(metaRecords[indexCount].name, direntp -> d_name);
+				strcpy(metaRecords[indexCount].parent, trimmer(dirname));
+				metaRecords[indexCount].isFile = true;
+				tmp = copyAndWrite(source, archive_file, tmp);
+				indexCount = tmp->index;
+				// printf("277 index count %d", indexCount);
+			}
+			// if dir
+			else if ((st.st_mode & S_IFMT) == S_IFDIR){
+				tmp->index = indexCount;
+				tmp = recursiveDir(source, archive_file, dirname, tmp);
+			} 
+		}
+		closedir (dir_ptr);
+	}
+	// printf("tmp -> index %d\n" , tmp->index);
+	return tmp;
+}
+
+void archive(char* archive_file, char* dirname){
+	addHeader(archive_file);
+	struct tmp* tmp;
+	tmp = (struct tmp*) malloc(sizeof(struct tmp));
+	tmp -> dataOffset = sizeof(header);
+	tmp -> index = 0;
+	tmp = recursiveDir(dirname, archive_file, "..", tmp);
+	updateHeader(tmp->dataOffset, tmp->index, archive_file);
+	addMeta(archive_file);
+	free(tmp);
+}
+
+void append(char* archive_file, char* dirname){
+	struct meta metas[20];
+	struct header h;
+	int numOfEle;
+	write_ptr = fopen(archive_file,"r+b"); 
+	fread (&h, sizeof(struct header), 1, write_ptr);
+	fseek (write_ptr, h.meta_offset, SEEK_SET);
+	numOfEle = h.num_elts;
+	fread(&metas, sizeof(struct meta)*20, 1, write_ptr);
+
+	struct tmp* tmp;
+	tmp = (struct tmp*) malloc(sizeof(struct tmp));
+	tmp -> dataOffset = h.meta_offset;
+	tmp -> index = h.num_elts;
+
+	numOfEle = recursiveDir(dirname, archive_file, "..", tmp);
+}
+
 int main(int argc, char *argv[]){
-	const char * archive_file;
-	const char * dirName;
+	char * archive_file;
+	char * dirName;
 	for (int q = 0; q < argc; q++)
 	{
-		//archive file
+		//archive file or directory
 		if (strcmp(argv[q], "-c") == 0){
             archive_file = argv[q + 1];
 			dirName = argv[q+2];
-			addHeader(archive_file);
-			breakDir (dirName, archive_file, "..");
-			updateHeader(dataOffset, fileCnt, archive_file);
-			addMeta(archive_file);
+			archive(archive_file, dirName);
         }
+		//append file or directory
 		else if (strcmp(argv[q], "-a") == 0){
-
+            archive_file = argv[q + 1];
+			dirName = argv[q+2];
+			append(archive_file,dirName);
 		}
 		//extract file
 		else if (strcmp(argv[q], "-x") == 0){
