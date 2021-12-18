@@ -77,9 +77,8 @@ void addMeta(char* archive_file, meta metaRecords[20]) {
 	write_ptr = fopen(archive_file,"r+b");  // w for write, b for binary
 	fread (&h, sizeof(struct header), 1, write_ptr);
 	fseek(write_ptr, h.meta_offset, SEEK_SET);
-	printf("meta offset %d", h.meta_offset);
+	// printf("meta offset %d", h.meta_offset);
 	fwrite (metaRecords, sizeof(struct meta), 20, write_ptr);
-
 	fclose(write_ptr);
 }
 
@@ -151,19 +150,10 @@ void extractfile(char path[1024], char* archive_file, int offset, int size, int 
 
 //path is current path
 void extract(char root[1024], char path[1024], char* archive_file, int permissions){
-	struct meta metas[20];
-	struct header h;
-	write_ptr = fopen(archive_file,"rb");  
-	fread (&h, sizeof(struct header), 1, write_ptr);
-	fseek (write_ptr, h.meta_offset, SEEK_SET);
-	fread(&metas, sizeof(struct meta)*20, 1, write_ptr);
-	fclose(write_ptr);
-
 	char tmppath[1024];
 	strcpy(tmppath, path);
 	strcat(tmppath, "/");
 	strcat(tmppath, trimmer(root));
-	// if (strcmp(root, "..") != 0){
 	if(mkdir(tmppath, 0777) == -1){
 		fprintf(stderr, "Error making dir: %s\n", path);
 		// free(m);
@@ -171,10 +161,16 @@ void extract(char root[1024], char path[1024], char* archive_file, int permissio
 		exit(1);
 	}
 	chmod(path, permissions);
-	sleep(1);
+	struct meta metas[20];
+	struct header h;
+	write_ptr = fopen(archive_file,"rb");  
+	fread (&h, sizeof(struct header), 1, write_ptr);
+	fseek (write_ptr, h.meta_offset, SEEK_SET);
+	fread(&metas, sizeof(struct meta)*20, 1, write_ptr);
+	fclose(write_ptr);
 	
 	for(int i = 0; i<h.num_elts; i++){
-		if(strcmp(metas[i].parent,root)== 0){
+		if(strcmp(metas[i].parent,trimmer(root))== 0){
 				//file
 				if(metas[i].isFile){
 					char tmppath1[1024];
@@ -291,7 +287,7 @@ void archive(char* archive_file, char* dirname){
 	tmp = recursiveDir(dirname, archive_file, "..", tmp, metaRecords);
 	updateHeader(tmp->dataOffset, tmp->index, archive_file);
 	addMeta(archive_file, metaRecords);
-	// free(tmp);
+	free(tmp);
 }
 
 void append(char* archive_file, char* dirname){
@@ -327,6 +323,7 @@ void append(char* archive_file, char* dirname){
 	updateHeader(tmp->dataOffset, tmp->index, archive_file);
 	addMeta(archive_file, metas);
 	fclose(write_ptr);
+	free(tmp);
 }
 
 int main(int argc, char *argv[]){
@@ -370,11 +367,14 @@ int main(int argc, char *argv[]){
 
 			for(int i =0; i< h.num_elts; i++){
 				if (strcmp(trimmer(dirName), metas[i].name) == 0){
-					isFile = 1;
-					index = i;
+					if(metas[i].isFile){
+						isFile = 1;
+						index = i;
+					}
 					break;
 				}
 			}
+			
 			if(isFile){
 				char tmppath1[1024];
 				strcpy(tmppath1, cwd);

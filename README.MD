@@ -1,10 +1,12 @@
-This application is built with C language. 
+# File archiver
+### Vivi Wei, Mengjie Shen
+
+#### This application is built with C language. 
 
 ### 1. Starting commands:
 
-The application is an archiving tool that can zip a given directory into a file  with postfix `.ad`. It supports flattening the hierarchies in the directory, unzipping the file, and selectively retrieve files or directories from the zipped file. For fast start, type `make run1`, which will archive a default file or directory. For manual testing, type `./adzip -c "test.bin" <PATH>`. 
+The application is an archiving tool that can zip a given directory into a file  with postfix `.ad`. It supports flattening the hierarchies in the directory, unzipping the file, and selectively retrieve files or directories from the zipped file. For fast start, type `make run1`, which will archive a default file or directory. For manual testing, type `./adzip -c "test.ad" <File/Directory>`. 
 
-(Note, if the path indicates a directory, user should always add `/` in the end).
 
 
 ### 2. Code Structures:
@@ -47,7 +49,7 @@ typedef struct header {
 
 When user wants to archive a file or directory, function `archive()` is invoked. It first adds a header to the file, then recursively flattens the directory given. In function `recursiveDir`, it opens the directory and checks all the inner children one by one. If it is a directory, `recursiveDir` will be called again. If it is a file, it will be directly written to the target file. They will both be entered in the `metaRecords`.
 
-When user wants to append a random file or directory into an existing `.ad` file, function `append()` will be invoked. It will first read from the `.ad` file, then operates similarly to `archive()` without creating a new file.
+When user wants to append a random file or directory into an existing `.ad` file, function `append()` will be invoked. It will first read from the `.ad` file and store the header and meta data in the short memory, then operates similarly to `archive()` and then update the metadata and header information to the `.ad` file.
 
 When user wants to recreate the directory or file from a `.ad` file, function `extract()` is invoked. It will extract a file or directory from the `.ad` file. It first reads header and metadata in the `.ad` file. If an entry is a file, it will invoke `extractfile()` to output the file. If an entry is a directory, `extract()` will be called again. 
 
@@ -93,6 +95,6 @@ To clean the executables:
 make clean
 ```
 
-###4. Acknowledgement:
+### 4. Acknowledgement:
 
 Inspired by https://github.com/RishiSadhir/Pittar.

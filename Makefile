@@ -19,23 +19,23 @@ help.o: help.c zip.h
 	$(CC) $(CFLAGS) -c help.c
 	
 run1: adzip
-	./adzip -c "test.bin" "tmp/testDir/"
+	./adzip -c "test.ad" "tmp/testDir/"
 
 run2: adzip
-	./adzip -a "test.bin" "tmp/testDir/k.txt"
+	./adzip -a "test.ad" "tmp/M"
 
 run3: adzip
-	./adzip -x "test.bin" "tmp/testDir/A/dirB/g.txt"
+	./adzip -x "test.ad" "tmp/testDir/"
 
 run4: adzip
-	./adzip -m "test.bin" "testDir/"
+	./adzip -m "test.ad" "testDir/"
 
 run5: adzip
-	./adzip -p "test.bin" "tmp/testDir/"
+	./adzip -p "test.ad" "tmp/M"
 
 
 clean: 
-	rm -f *~ *.o test a.out core test.bin adzip main
+	rm -f *~ *.o test a.out core test.ad adzip main
 
 # readwriteclose.o: readwriteclose.c zip.h
 # 	$(CC) $(CFLAGS) -c readwriteclose.c
