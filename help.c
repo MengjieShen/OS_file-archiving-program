@@ -36,3 +36,27 @@ char * trimmer(char * str)
         return end;
     }
 }
+
+/*   Given a long path ie: home/hi/something/whatever////
+**   will return the last element, ie: something
+*/
+char* trimmer2(char * str, char* end) {
+//    char string[50] = "Hello! We are learning about strtok";
+   // Extract the first token
+   char * token = strtok(str, "/");
+   char* last;
+   // loop through the string to extract all other tokens
+   while( true ) {
+    //   printf( " %s\n", token ); //printing each token
+      last = token;
+      token = strtok(NULL, "/");
+      if(token == NULL){
+          last = "..";
+          break;
+      }
+      if(strcmp(token,end) ==0){
+          break;
+      }
+   }
+   return last;
+}
