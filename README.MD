@@ -5,7 +5,9 @@
 
 ### 1. Starting commands:
 
-The application is an archiving tool that can zip a given directory into a file  with postfix `.ad`. It supports flattening the hierarchies in the directory, unzipping the file, and selectively retrieve files or directories from the zipped file. For fast start, type `make run1`, which will archive a default file or directory. For manual testing, type `./adzip -c "test.ad" <File/Directory>`. 
+The application is an archiving tool that can zip a given directory into a file  with postfix `.ad`. It supports flattening the hierarchies in the directory, unzipping the file, and selectively retrieve files or directories from the zipped file. For fast start, type `make run1`, which will archive a default file or directory. For manual testing, type `./adzip -c "test.ad" <File/Directory>`. You can use the directory `tmp` for sample. 
+
+Note that since the main focus of our code is to construct and manifest the fire archive sturcture, so currently it can only be used on a small sample, supports 20 files and directories in total.
 
 
 

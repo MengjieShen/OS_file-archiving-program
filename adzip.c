@@ -296,9 +296,10 @@ void archive(char* archive_file, char* dirname){
 	tmp -> dataOffset = sizeof(header);
 	tmp -> index = 0;
 	tmp = recursiveDir(dirname, archive_file, "..", tmp, metaRecords);
-	updateHeader(tmp->dataOffset, tmp->index, archive_file);
-	addMeta(archive_file, metaRecords);
+	// updateHeader(tmp->dataOffset, tmp->index, archive_file);
+	// addMeta(archive_file, metaRecords);
 	free(tmp);
+	tmp = NULL;
 }
 
 void append(char* archive_file, char* dirname){
@@ -335,6 +336,7 @@ void append(char* archive_file, char* dirname){
 	addMeta(archive_file, metas);
 	fclose(write_ptr);
 	free(tmp);
+	tmp = NULL;
 }
 
 int main(int argc, char *argv[]){
