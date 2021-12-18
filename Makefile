@@ -22,10 +22,10 @@ run1: adzip
 	./adzip -c "test.bin" "tmp/testDir/"
 
 run2: adzip
-	./adzip -a "test.bin" tmp/"M/"
+	./adzip -a "test.bin" "tmp/testDir/k.txt"
 
 run3: adzip
-	./adzip -x "test.bin" "/Users/shenmengjie/Documents/GitHub/OS_file-archiving-program/tmp/testDir/dirA/f.txt"
+	./adzip -x "test.bin" "tmp/testDir/A/dirB/g.txt"
 
 run4: adzip
 	./adzip -m "test.bin" "testDir/"
@@ -35,7 +35,7 @@ run5: adzip
 
 
 clean: 
-	rm -f *~ *.o test a.out core main
+	rm -f *~ *.o test a.out core test.bin adzip main
 
 # readwriteclose.o: readwriteclose.c zip.h
 # 	$(CC) $(CFLAGS) -c readwriteclose.c

@@ -16,7 +16,6 @@ typedef struct tmp{
 typedef struct header {
   int num_elts; //total elements including directories
   int meta_offset;
-  int next;
 } header;
 
 // struct meta metaRecords[20];
