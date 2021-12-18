@@ -5,6 +5,8 @@ typedef struct meta {
   int offset;
   char parent[20];
   bool isFile;
+  int st_uid;
+  int st_gid;
   mode_t permissions;
 } meta;
 

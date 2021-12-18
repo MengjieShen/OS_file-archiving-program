@@ -59,32 +59,53 @@ When user wants to view the hierarchy of the directory or file stored in `.ad` f
 
 The application can be run from the console.
 
-To archive a file or directory:
+1. To archive a file or directory:
 
+```C
+./adzip -c <archive-file> <file/directory list>
+```
+or  
 ```C
 make run1
 ```
 
-To append file or directory to an existing `.ad` file (You can both append the sub-directory or sub-file of the existing directory, or a director or file that is apart from the existing directory):
+\
+2. To append file or directory to an existing `.ad` file (You can both append the sub-directory or sub-file of the existing directory, or a director or file that is apart from the existing directory):
 
+```C
+./adzip -a <archive-file> <file/directory list>
+```
+or 
 ```C
 make run2
 ```
-
-To unzip an existing `.ad` file:
-
+\
+3. To unzip an existing `.ad` file:
+```C
+./adzip -x <archive-file> <file/directory list>
+```
+or
 ```C
 make run3
 ```
-
-To display metadata:
-
+\
+4. To display metadata:
+```C
+./adzip -m <archive-file> <file/directory list>
+```
+or
 ```C
 make run4
 ```
+\
+5. To display the hierarchy in an existing `.ad` file:
 
-To display the hierarchy in an existing `.ad` file:
+```C
 
+./adzip -p <archive-file> <file/directory list>
+```
+
+or
 ```C
 make run5
 ```

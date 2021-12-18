@@ -31,7 +31,7 @@ run4: adzip
 	./adzip -m "test.ad" "testDir/"
 
 run5: adzip
-	./adzip -p "test.ad" "tmp/M"
+	./adzip -p "test.ad" "tmp/testDir"
 
 
 clean: 
