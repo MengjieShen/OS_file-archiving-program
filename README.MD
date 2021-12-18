@@ -22,6 +22,8 @@ typedef struct meta {
   int offset;
   char parent[20];
   bool isFile;
+  int st_uid;
+  int st_gid;
   mode_t permissions;
 } meta;
 ```
@@ -59,12 +61,13 @@ When user wants to view the hierarchy of the directory or file stored in `.ad` f
 
 The application can be run from the console.
 
+
 1. To archive a file or directory:
 
 ```C
 ./adzip -c <archive-file> <file/directory list>
 ```
-or  
+for quick start use: 
 ```C
 make run1
 ```
@@ -75,7 +78,7 @@ make run1
 ```C
 ./adzip -a <archive-file> <file/directory list>
 ```
-or 
+for quick start use:
 ```C
 make run2
 ```
@@ -84,7 +87,7 @@ make run2
 ```C
 ./adzip -x <archive-file> <file/directory list>
 ```
-or
+for quick start use:
 ```C
 make run3
 ```
@@ -93,7 +96,7 @@ make run3
 ```C
 ./adzip -m <archive-file> <file/directory list>
 ```
-or
+for quick start use:
 ```C
 make run4
 ```
@@ -105,12 +108,12 @@ make run4
 ./adzip -p <archive-file> <file/directory list>
 ```
 
-or
+for quick start use:
 ```C
 make run5
 ```
-
-To clean the executables:
+\
+6. To clean the executables:
 
 ```C
 make clean
